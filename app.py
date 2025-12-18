@@ -7,7 +7,7 @@ import numpy as np
 import os
 
 # --- Paths ---
-MODEL_PATH = "sentiment_cnn_model"  # SavedModel folder
+MODEL_PATH = "sentiment_cnn_model.h5"  # Use .h5 file instead of SavedModel folder
 TOKENIZER_PATH = "tokenizer.pkl"
 
 # --- Load model and tokenizer ---
@@ -17,7 +17,7 @@ if os.path.exists(MODEL_PATH):
     except Exception as e:
         st.error(f"Error loading model: {e}")
 else:
-    st.error(f"Model folder not found at {MODEL_PATH}")
+    st.error(f"Model file not found at {MODEL_PATH}. Please convert your SavedModel to .h5 format.")
 
 if os.path.exists(TOKENIZER_PATH):
     try:
@@ -31,7 +31,9 @@ else:
 # --- Preprocessing function ---
 def preprocess_input(text):
     text = text.lower()
+    # Remove URLs, mentions, hashtags
     text = re.sub(r"http\S+|www\S+|@\w+|#\w+", "", text)
+    # Keep only letters and spaces
     text = re.sub(r"[^a-z\s]", "", text)
 
     sequence = tokenizer.texts_to_sequences([text])
@@ -71,6 +73,6 @@ if st.button("Predict Sentiment"):
         elif result == "Negative":
             st.error(f"😞 Negative Sentiment")
         else:
-            st.warning(result)
+            st.warning(result)  # Show error messages if any
         
         st.markdown(f"**Input Text:** {user_text}")
