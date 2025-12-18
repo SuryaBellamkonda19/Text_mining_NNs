@@ -1,9 +1,10 @@
 import streamlit as st
-from keras.models import load_model
-from keras.utils import pad_sequences
+from tensorflow.keras.models import load_model
+from tensorflow.keras.utils import pad_sequences
 import pickle
 import re
 import numpy as np
+
 
 # --- Load model and tokenizer ---
 model = load_model("sentiment_cnn_model")  # replace with your path if needed
