@@ -1,13 +1,13 @@
 import streamlit as st
-from keras.models import load_model
-from keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pickle
 import re
 import numpy as np
 import os
 
 # --- Paths ---
-MODEL_PATH = "sentiment_cnn_model.h5"  # Use .h5 file instead of SavedModel folder
+MODEL_PATH = "sentiment_cnn_model.h5"
 TOKENIZER_PATH = "tokenizer.pkl"
 
 # --- Load model and tokenizer ---
@@ -17,7 +17,7 @@ if os.path.exists(MODEL_PATH):
     except Exception as e:
         st.error(f"Error loading model: {e}")
 else:
-    st.error(f"Model file not found at {MODEL_PATH}. Please convert your SavedModel to .h5 format.")
+    st.error(f"Model file not found at {MODEL_PATH}.")
 
 if os.path.exists(TOKENIZER_PATH):
     try:
@@ -26,22 +26,25 @@ if os.path.exists(TOKENIZER_PATH):
     except Exception as e:
         st.error(f"Error loading tokenizer: {e}")
 else:
-    st.error(f"Tokenizer file not found at {TOKENIZER_PATH}")
+    st.error(f"Tokenizer file not found at {TOKENIZER_PATH}.")
+
+# --- Offensive / negative words list ---
+OFFENSIVE_WORDS = ["bitch", "shit", "fuck", "asshole", "damn"]  # add more if needed
 
 # --- Preprocessing function ---
 def preprocess_input(text):
     text = text.lower()
-    # Remove URLs, mentions, hashtags
     text = re.sub(r"http\S+|www\S+|@\w+|#\w+", "", text)
-    # Keep only letters and spaces
     text = re.sub(r"[^a-z\s]", "", text)
-
     sequence = tokenizer.texts_to_sequences([text])
     padded = pad_sequences(sequence, maxlen=100)
     return padded
 
-# --- Prediction function ---
+# --- Prediction function with offensive word check ---
 def predict_sentiment(text):
+    # Check for offensive words first
+    if any(word in text.lower().split() for word in OFFENSIVE_WORDS):
+        return "Negative"
     try:
         processed_text = preprocess_input(text)
         prediction = model.predict(processed_text)[0][0]
@@ -73,6 +76,6 @@ if st.button("Predict Sentiment"):
         elif result == "Negative":
             st.error(f"😞 Negative Sentiment")
         else:
-            st.warning(result)  # Show error messages if any
+            st.warning(result)
         
         st.markdown(f"**Input Text:** {user_text}")
