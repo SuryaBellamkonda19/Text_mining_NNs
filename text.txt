@@ -1,0 +1,27 @@
+# Sentiment Analyzer - User Guide
+
+Welcome to the **Sentiment Analyzer** app! This tool predicts the sentiment (**Positive**, **Negative**, **Neutral**) of any sentence or tweet.
+
+---
+
+## How to Use:
+1. Enter your text in the input box below.
+2. Click **Predict Sentiment**.
+3. See the predicted sentiment displayed with a **color-coded indicator** and **emoji**.
+
+---
+
+## App Overview:
+- **Positive Sentiment:** Green with 😊 emoji  
+- **Negative Sentiment:** Red with 😞 emoji  
+- **Neutral Sentiment:** Blue with 😐 emoji
+
+---
+
+## 🌐 App URL:
+You can access this app anytime via:  
+[https://textanalyserwithnns.streamlit.app/](https://textanalyserwithnns.streamlit.app/)
+
+---
+
+Enjoy exploring the sentiments of your text!
