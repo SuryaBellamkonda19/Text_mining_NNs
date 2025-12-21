@@ -3,33 +3,79 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pickle
 import re
+import numpy as np
 import os
 
+# --- Paths ---
 MODEL_PATH = "sentiment_cnn_model.h5"
 TOKENIZER_PATH = "tokenizer.pkl"
-MAX_LEN = 100
 
-model = load_model(MODEL_PATH)
+# --- Load model and tokenizer ---
+if os.path.exists(MODEL_PATH):
+    try:
+        model = load_model(MODEL_PATH)
+    except Exception as e:
+        st.error(f"Error loading model: {e}")
+else:
+    st.error(f"Model file not found at {MODEL_PATH}.")
 
-with open(TOKENIZER_PATH, "rb") as f:
-    tokenizer = pickle.load(f)
+if os.path.exists(TOKENIZER_PATH):
+    try:
+        with open(TOKENIZER_PATH, "rb") as f:
+            tokenizer = pickle.load(f)
+    except Exception as e:
+        st.error(f"Error loading tokenizer: {e}")
+else:
+    st.error(f"Tokenizer file not found at {TOKENIZER_PATH}.")
 
-def preprocess_text(text):
+# --- Offensive / negative words list ---
+OFFENSIVE_WORDS = ["bitch", "shit", "fuck", "asshole", "damn"]  # add more if needed
+
+# --- Preprocessing function ---
+def preprocess_input(text):
     text = text.lower()
     text = re.sub(r"http\S+|www\S+|@\w+|#\w+", "", text)
     text = re.sub(r"[^a-z\s]", "", text)
-    seq = tokenizer.texts_to_sequences([text])
-    return pad_sequences(seq, maxlen=MAX_LEN)
+    sequence = tokenizer.texts_to_sequences([text])
+    padded = pad_sequences(sequence, maxlen=100)
+    return padded
 
+# --- Prediction function with offensive word check ---
 def predict_sentiment(text):
-    pred = model.predict(preprocess_text(text))[0][0]
-    return "Positive" if pred >= 0.5 else "Negative"
+    # Check for offensive words first
+    if any(word in text.lower().split() for word in OFFENSIVE_WORDS):
+        return "Negative"
+    try:
+        processed_text = preprocess_input(text)
+        prediction = model.predict(processed_text)[0][0]
+        return "Positive" if prediction >= 0.5 else "Negative"
+    except Exception as e:
+        return f"Error during prediction: {e}"
 
-st.title("Sentiment Analyzer (CNN)")
-text = st.text_area("Enter text")
+# --- Streamlit App ---
+st.set_page_config(page_title="Sentiment Analyzer", page_icon="😊", layout="centered")
+st.title("📝 Sentiment Analyzer")
 
-if st.button("Predict"):
-    if text.strip():
-        st.success(predict_sentiment(text))
+st.markdown("""
+## 📖 User Guide
+
+Enter a tweet or sentence below and click **Predict Sentiment**.  
+The app will show whether the sentiment is **Positive** or **Negative**.
+""")
+
+user_text = st.text_area("Enter your text here...", height=100)
+
+if st.button("Predict Sentiment"):
+    if not user_text.strip():
+        st.warning("Please enter some text to analyze!")
     else:
-        st.warning("Enter some text")
+        result = predict_sentiment(user_text)
+        
+        if result == "Positive":
+            st.success(f"😊 Positive Sentiment")
+        elif result == "Negative":
+            st.error(f"😞 Negative Sentiment")
+        else:
+            st.warning(result)
+        
+        st.markdown(f"**Input Text:** {user_text}")
